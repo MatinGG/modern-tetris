@@ -166,4 +166,16 @@ function tick() {
 setInterval(tick, 500);
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowLeft" && isValid(0, -
+  if (e.key === "ArrowLeft" && isValid(0, -1)) {
+    current.col--;
+  } else if (e.key === "ArrowRight" && isValid(0, 1)) {
+    current.col++;
+  } else if (e.key === "ArrowDown" && isValid(1, 0)) {
+    current.row++;
+  } else if (e.key === "ArrowUp") {
+    rotate();
+  }
+  draw();
+});
+
+spawnPiece();
