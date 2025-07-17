@@ -1,6 +1,5 @@
 const game = document.getElementById("game");
 
-// ساختن grid
 const rows = 20, cols = 10;
 const grid = [];
 for (let r = 0; r < rows; r++) {
@@ -14,7 +13,6 @@ for (let r = 0; r < rows; r++) {
   grid.push(row);
 }
 
-// شکل‌های تتریس
 const SHAPES = [
   [[1,1,1,1]], // I
   [[1,1],[1,1]], // O
@@ -25,7 +23,6 @@ const SHAPES = [
   [[1,1,0],[0,1,1]]  // Z
 ];
 
-// تابع رنگ تصادفی RGB
 function getRandomColor() {
   const r = Math.floor(Math.random() * 200) + 55;
   const g = Math.floor(Math.random() * 200) + 55;
@@ -33,7 +30,6 @@ function getRandomColor() {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-// شکل فعلی
 let current = {
   shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
   row: 0,
@@ -79,8 +75,8 @@ function fix() {
   });
 }
 
-function canMove(offsetRow, offsetCol) {
-  return current.shape.every((row, r) => {
+function canMove(offsetRow, offsetCol, shape = current.shape) {
+  return shape.every((row, r) => {
     return row.every((val, c) => {
       if (!val) return true;
       const y = current.row + r + offsetRow;
@@ -129,16 +125,29 @@ function clearLines() {
           grid[y][x].style.backgroundColor = grid[y-1][x].style.backgroundColor;
         }
       }
-      r++; // بررسی مجدد همین ردیف
+      r++;
     }
   }
 }
 
+function rotate(shape) {
+  return shape[0].map((_, i) => shape.map(row => row[i]).reverse());
+}
+
 document.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowLeft" && canMove(0, -1)) current.col--;
-  else if (e.key === "ArrowRight" && canMove(0, 1)) current.col++;
-  else if (e.key === "ArrowDown") moveDown();
+  if (e.key === "ArrowLeft" && canMove(0, -1)) {
+    current.col--;
+  } else if (e.key === "ArrowRight" && canMove(0, 1)) {
+    current.col++;
+  } else if (e.key === "ArrowDown") {
+    moveDown();
+  } else if (e.key === "ArrowUp") {
+    const rotated = rotate(current.shape);
+    if (canMove(0, 0, rotated)) {
+      current.shape = rotated;
+    }
+  }
   draw();
 });
 
-setInterval(moveDown, 500); // سرعت بازی
+setInterval(moveDown, 500);
