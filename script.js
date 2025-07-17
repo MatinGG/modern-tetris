@@ -1,10 +1,11 @@
+const rows = 20;
+const cols = 10;
 const game = document.getElementById("game");
 const scoreDisplay = document.getElementById("score");
-
-const rows = 20, cols = 10;
-const grid = [];
 let score = 0;
 
+// ساختن گرید بازی
+const grid = [];
 for (let r = 0; r < rows; r++) {
   const row = [];
   for (let c = 0; c < cols; c++) {
@@ -16,42 +17,42 @@ for (let r = 0; r < rows; r++) {
   grid.push(row);
 }
 
-const SHAPES = [
-  [[1, 1, 1, 1]],          // I
-  [[1, 1], [1, 1]],        // O
-  [[0, 1, 0], [1, 1, 1]],  // T
-  [[1, 0, 0], [1, 1, 1]],  // J
-  [[0, 0, 1], [1, 1, 1]],  // L
-  [[1, 1, 0], [0, 1, 1]],  // S
-  [[0, 1, 1], [1, 1, 0]]   // Z
+// شکل‌های تترس
+const shapes = [
+  [[1, 1, 1, 1]],                  // I
+  [[1, 1], [1, 1]],                // O
+  [[0, 1, 0], [1, 1, 1]],          // T
+  [[1, 0, 0], [1, 1, 1]],          // L
+  [[0, 0, 1], [1, 1, 1]],          // J
+  [[1, 1, 0], [0, 1, 1]],          // S
+  [[0, 1, 1], [1, 1, 0]],          // Z
 ];
 
+// تابع ساخت رنگ RGB تصادفی
 function randomColor() {
-  const r = () => Math.floor(Math.random() * 256);
-  return `rgb(${r()},${r()},${r()})`;
+  const r = Math.floor(Math.random() * 155 + 100);
+  const g = Math.floor(Math.random() * 155 + 100);
+  const b = Math.floor(Math.random() * 155 + 100);
+  return `rgb(${r}, ${g}, ${b})`;
 }
 
-function createPiece() {
-  const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
-  return {
-    shape,
-    row: 0,
-    col: Math.floor((cols - shape[0].length) / 2),
-    color: randomColor()
-  };
-}
-
-let current = createPiece();
+// وضعیت فعلی قطعه
+let current = {
+  shape: null,
+  row: 0,
+  col: 0,
+  color: "#fff"
+};
 
 function draw() {
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      if (!grid[r][c].classList.contains("fixed")) {
-        grid[r][c].style.backgroundColor = "#222";
-      }
+  // پاک‌سازی گرید
+  grid.forEach(row => row.forEach(cell => {
+    if (!cell.classList.contains("fixed")) {
+      cell.style.backgroundColor = "#222";
     }
-  }
+  }));
 
+  // کشیدن قطعه
   current.shape.forEach((row, rIdx) => {
     row.forEach((val, cIdx) => {
       if (val) {
@@ -63,26 +64,6 @@ function draw() {
       }
     });
   });
-}
-
-function canMove(offsetRow, offsetCol, testShape = current.shape) {
-  for (let r = 0; r < testShape.length; r++) {
-    for (let c = 0; c < testShape[r].length; c++) {
-      if (testShape[r][c]) {
-        const newR = current.row + r + offsetRow;
-        const newC = current.col + c + offsetCol;
-        if (
-          newR >= rows ||
-          newC < 0 ||
-          newC >= cols ||
-          (newR >= 0 && grid[newR][newC].classList.contains("fixed"))
-        ) {
-          return false;
-        }
-      }
-    }
-  }
-  return true;
 }
 
 function freeze() {
@@ -99,17 +80,45 @@ function freeze() {
       }
     });
   });
+
+  // امتیاز به ازای گذاشتن قطعه
+  score += 100;
+  scoreDisplay.textContent = score;
+}
+
+function isValid(rowOffset = 0, colOffset = 0, shape = current.shape) {
+  return shape.every((row, rIdx) =>
+    row.every((val, cIdx) => {
+      if (!val) return true;
+      const r = current.row + rIdx + rowOffset;
+      const c = current.col + cIdx + colOffset;
+      return r >= 0 && r < rows && c >= 0 && c < cols &&
+        !grid[r][c].classList.contains("fixed");
+    })
+  );
+}
+
+function rotate() {
+  const rotated = current.shape[0].map((_, i) =>
+    current.shape.map(row => row[i]).reverse()
+  );
+  if (isValid(0, 0, rotated)) {
+    current.shape = rotated;
+  }
 }
 
 function clearLines() {
   for (let r = rows - 1; r >= 0; r--) {
     if (grid[r].every(cell => cell.classList.contains("fixed"))) {
-      score += 100;
-      scoreDisplay.textContent = score;
-
+      // انیمیشن قبل از حذف
       grid[r].forEach(cell => cell.classList.add("clearing"));
 
       setTimeout(() => {
+        // امتیاز حذف خط
+        score += 500;
+        scoreDisplay.textContent = score;
+
+        // پاک کردن لاین
         grid[r].forEach(cell => {
           cell.classList.remove("clearing", "fixed");
           cell.style.backgroundColor = "#222";
@@ -121,47 +130,40 @@ function clearLines() {
             grid[y][x].style.backgroundColor = grid[y - 1][x].style.backgroundColor;
           }
         }
-
         r++;
       }, 400);
     }
   }
 }
 
-function moveDown() {
-  if (canMove(1, 0)) {
+function spawnPiece() {
+  const shape = shapes[Math.floor(Math.random() * shapes.length)];
+  const color = randomColor();
+  current = {
+    shape,
+    row: 0,
+    col: Math.floor((cols - shape[0].length) / 2),
+    color
+  };
+
+  if (!isValid()) {
+    alert("Game Over! Your score: " + score);
+    location.reload();
+  }
+}
+
+function tick() {
+  if (isValid(1, 0)) {
     current.row++;
   } else {
     freeze();
     clearLines();
-    current = createPiece();
-    if (!canMove(0, 0)) {
-      alert("Game Over\nFinal Score: " + score);
-      location.reload();
-    }
+    spawnPiece();
   }
   draw();
 }
 
-function rotate(shape) {
-  return shape[0].map((_, i) => shape.map(row => row[i]).reverse());
-}
+setInterval(tick, 500);
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowLeft" && canMove(0, -1)) {
-    current.col--;
-  } else if (e.key === "ArrowRight" && canMove(0, 1)) {
-    current.col++;
-  } else if (e.key === "ArrowDown") {
-    moveDown();
-  } else if (e.key === "ArrowUp") {
-    const rotated = rotate(current.shape);
-    if (canMove(0, 0, rotated)) {
-      current.shape = rotated;
-    }
-  }
-  draw();
-});
-
-setInterval(moveDown, 500);
-draw();
+  if (e.key === "ArrowLeft" && isValid(0, -

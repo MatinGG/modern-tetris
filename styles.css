@@ -11,13 +11,11 @@ body {
 }
 
 h1 {
-  margin: 10px 0;
+  margin-bottom: 10px;
 }
 
-#scoreboard {
-  margin-bottom: 15px;
-  font-size: 1.2em;
-  font-weight: bold;
+h2 {
+  margin: 0 0 20px;
 }
 
 #game {
@@ -34,10 +32,6 @@ h1 {
   height: 30px;
   background-color: #222;
   box-sizing: border-box;
-}
-
-.fixed {
-  border: 1px solid #000;
 }
 
 @keyframes lineClear {
