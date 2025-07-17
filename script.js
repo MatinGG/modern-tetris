@@ -2,9 +2,12 @@ const rows = 20;
 const cols = 10;
 const game = document.getElementById("game");
 const scoreDisplay = document.getElementById("score");
+const restartBtn = document.getElementById("restartBtn");
 let score = 0;
+let intervalId;
+let isGameOver = false;
 
-// ساختن گرید بازی
+// ساخت گرید
 const grid = [];
 for (let r = 0; r < rows; r++) {
   const row = [];
@@ -17,7 +20,6 @@ for (let r = 0; r < rows; r++) {
   grid.push(row);
 }
 
-// شکل‌های تترس
 const shapes = [
   [[1, 1, 1, 1]],                  // I
   [[1, 1], [1, 1]],                // O
@@ -28,7 +30,6 @@ const shapes = [
   [[0, 1, 1], [1, 1, 0]],          // Z
 ];
 
-// تابع ساخت رنگ RGB تصادفی
 function randomColor() {
   const r = Math.floor(Math.random() * 155 + 100);
   const g = Math.floor(Math.random() * 155 + 100);
@@ -36,7 +37,6 @@ function randomColor() {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-// وضعیت فعلی قطعه
 let current = {
   shape: null,
   row: 0,
@@ -45,14 +45,12 @@ let current = {
 };
 
 function draw() {
-  // پاک‌سازی گرید
   grid.forEach(row => row.forEach(cell => {
     if (!cell.classList.contains("fixed")) {
       cell.style.backgroundColor = "#222";
     }
   }));
 
-  // کشیدن قطعه
   current.shape.forEach((row, rIdx) => {
     row.forEach((val, cIdx) => {
       if (val) {
@@ -81,9 +79,8 @@ function freeze() {
     });
   });
 
-  // امتیاز به ازای گذاشتن قطعه
   score += 100;
-  scoreDisplay.textContent = score;
+  updateScore();
 }
 
 function isValid(rowOffset = 0, colOffset = 0, shape = current.shape) {
@@ -110,15 +107,12 @@ function rotate() {
 function clearLines() {
   for (let r = rows - 1; r >= 0; r--) {
     if (grid[r].every(cell => cell.classList.contains("fixed"))) {
-      // انیمیشن قبل از حذف
       grid[r].forEach(cell => cell.classList.add("clearing"));
 
       setTimeout(() => {
-        // امتیاز حذف خط
         score += 500;
-        scoreDisplay.textContent = score;
+        updateScore();
 
-        // پاک کردن لاین
         grid[r].forEach(cell => {
           cell.classList.remove("clearing", "fixed");
           cell.style.backgroundColor = "#222";
@@ -136,6 +130,10 @@ function clearLines() {
   }
 }
 
+function updateScore() {
+  scoreDisplay.textContent = score;
+}
+
 function spawnPiece() {
   const shape = shapes[Math.floor(Math.random() * shapes.length)];
   const color = randomColor();
@@ -147,12 +145,14 @@ function spawnPiece() {
   };
 
   if (!isValid()) {
-    alert("Game Over! Your score: " + score);
-    location.reload();
+    isGameOver = true;
+    clearInterval(intervalId);
+    alert(`Game Over! Your score: ${score}`);
   }
 }
 
 function tick() {
+  if (isGameOver) return;
   if (isValid(1, 0)) {
     current.row++;
   } else {
@@ -163,9 +163,28 @@ function tick() {
   draw();
 }
 
-setInterval(tick, 500);
+function startGame() {
+  score = 0;
+  updateScore();
+  isGameOver = false;
 
+  // پاک کردن صفحه و کلاس‌ها
+  grid.forEach(row => {
+    row.forEach(cell => {
+      cell.className = "cell";
+      cell.style.backgroundColor = "#222";
+    });
+  });
+
+  spawnPiece();
+  draw();
+  clearInterval(intervalId);
+  intervalId = setInterval(tick, 400);
+}
+
+// کنترل‌ها
 document.addEventListener("keydown", (e) => {
+  if (isGameOver) return;
   if (e.key === "ArrowLeft" && isValid(0, -1)) {
     current.col--;
   } else if (e.key === "ArrowRight" && isValid(0, 1)) {
@@ -178,4 +197,9 @@ document.addEventListener("keydown", (e) => {
   draw();
 });
 
-spawnPiece();
+restartBtn.addEventListener("click", () => {
+  startGame();
+});
+
+// شروع بازی اولیه
+startGame();

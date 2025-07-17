@@ -1,19 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Tetris RGB - Boosted</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tetris RGB - Power Boosted</title>
   <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto&display=swap" rel="stylesheet" />
 </head>
 <body>
   <div id="container">
     <h1>TETRIS RGB</h1>
     <h2>Score: <span id="score">0</span></h2>
     <div id="game"></div>
-    <p class="hint">Use ← ↓ → to move, ↑ to rotate</p>
-    <p class="tip">Every block = +100 pts | Every line = +500 pts</p>
-    <p class="motivate">Can you beat 5000? Go for it, legend! 🌟</p>
+    <div class="info">
+      <p class="hint">Use <span class="key">←</span> <span class="key">↓</span> <span class="key">→</span> to move, <span class="key">↑</span> to rotate</p>
+      <p class="tip">Each block placed = <strong>+100</strong> points | Each line cleared = <strong>+500</strong> points</p>
+      <p class="motivate">🔥 <strong>Beat 5000 points and become a legend!</strong> 🔥</p>
+      <button id="restartBtn">Restart Game</button>
+    </div>
   </div>
   <script src="script.js"></script>
 </body>
