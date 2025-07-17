@@ -7,7 +7,7 @@ let score = 0;
 let intervalId;
 let isGameOver = false;
 
-// ساخت گرید
+// ساخت گرید بازی: 20 ردیف در 10 ستون
 const grid = [];
 for (let r = 0; r < rows; r++) {
   const row = [];
@@ -20,6 +20,7 @@ for (let r = 0; r < rows; r++) {
   grid.push(row);
 }
 
+// اشکال تتریس
 const shapes = [
   [[1, 1, 1, 1]],                  // I
   [[1, 1], [1, 1]],                // O
@@ -30,6 +31,7 @@ const shapes = [
   [[0, 1, 1], [1, 1, 0]],          // Z
 ];
 
+// تولید رنگ تصادفی RGB روشن
 function randomColor() {
   const r = Math.floor(Math.random() * 155 + 100);
   const g = Math.floor(Math.random() * 155 + 100);
@@ -44,6 +46,7 @@ let current = {
   color: "#fff"
 };
 
+// رسم شکل فعلی
 function draw() {
   grid.forEach(row => row.forEach(cell => {
     if (!cell.classList.contains("fixed")) {
@@ -64,6 +67,7 @@ function draw() {
   });
 }
 
+// فریز کردن قطعه در محل و اضافه کردن امتیاز برای هر بلاک
 function freeze() {
   current.shape.forEach((row, rIdx) => {
     row.forEach((val, cIdx) => {
@@ -79,10 +83,18 @@ function freeze() {
     });
   });
 
-  score += 100;
+  score += 100 * countBlocks(current.shape);
   updateScore();
 }
 
+// شمردن بلاک‌های یک شکل (میدانم تعداد 4 هست ولی برای اطمینان)
+function countBlocks(shape) {
+  let count = 0;
+  shape.forEach(row => row.forEach(val => { if(val) count++; }));
+  return count;
+}
+
+// چک کردن اعتبار حرکت
 function isValid(rowOffset = 0, colOffset = 0, shape = current.shape) {
   return shape.every((row, rIdx) =>
     row.every((val, cIdx) => {
@@ -95,6 +107,7 @@ function isValid(rowOffset = 0, colOffset = 0, shape = current.shape) {
   );
 }
 
+// چرخش قطعه (90 درجه)
 function rotate() {
   const rotated = current.shape[0].map((_, i) =>
     current.shape.map(row => row[i]).reverse()
@@ -104,6 +117,7 @@ function rotate() {
   }
 }
 
+// پاک کردن خطوط پر و دادن امتیاز
 function clearLines() {
   for (let r = rows - 1; r >= 0; r--) {
     if (grid[r].every(cell => cell.classList.contains("fixed"))) {
@@ -168,7 +182,6 @@ function startGame() {
   updateScore();
   isGameOver = false;
 
-  // پاک کردن صفحه و کلاس‌ها
   grid.forEach(row => {
     row.forEach(cell => {
       cell.className = "cell";
@@ -182,7 +195,7 @@ function startGame() {
   intervalId = setInterval(tick, 400);
 }
 
-// کنترل‌ها
+// کنترل‌های کیبورد
 document.addEventListener("keydown", (e) => {
   if (isGameOver) return;
   if (e.key === "ArrowLeft" && isValid(0, -1)) {
@@ -197,9 +210,10 @@ document.addEventListener("keydown", (e) => {
   draw();
 });
 
+// دکمه ری‌استارت
 restartBtn.addEventListener("click", () => {
   startGame();
 });
 
-// شروع بازی اولیه
+// شروع بازی
 startGame();
