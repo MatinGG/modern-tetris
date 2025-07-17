@@ -1,94 +1,103 @@
-const rows = 20;
-const cols = 10;
 const game = document.getElementById("game");
-let grid = [];
 
-// ساختن گرید
+// ساختن grid
+const rows = 20, cols = 10;
+const grid = [];
 for (let r = 0; r < rows; r++) {
-  grid[r] = [];
+  const row = [];
   for (let c = 0; c < cols; c++) {
     const cell = document.createElement("div");
-    cell.className = "cell";
+    cell.classList.add("cell");
     game.appendChild(cell);
-    grid[r][c] = cell;
+    row.push(cell);
   }
+  grid.push(row);
 }
 
-// شکل‌ها
+// شکل‌های تتریس
 const SHAPES = [
-  [[1, 1, 1], [0, 1, 0]],       // T
-  [[1, 1], [1, 1]],             // O
-  [[1, 1, 0], [0, 1, 1]],       // S
-  [[0, 1, 1], [1, 1, 0]],       // Z
-  [[1, 1, 1, 1]],               // I
+  [[1,1,1,1]], // I
+  [[1,1],[1,1]], // O
+  [[0,1,0],[1,1,1]], // T
+  [[1,0,0],[1,1,1]], // L
+  [[0,0,1],[1,1,1]], // J
+  [[0,1,1],[1,1,0]], // S
+  [[1,1,0],[0,1,1]]  // Z
 ];
 
+// تابع رنگ تصادفی RGB
+function getRandomColor() {
+  const r = Math.floor(Math.random() * 200) + 55;
+  const g = Math.floor(Math.random() * 200) + 55;
+  const b = Math.floor(Math.random() * 200) + 55;
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+// شکل فعلی
 let current = {
   shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
   row: 0,
-  col: 3
+  col: 3,
+  color: getRandomColor()
 };
 
-// رسم شکل
 function draw() {
   clear();
   current.shape.forEach((row, r) => {
     row.forEach((val, c) => {
-      if (val && grid[current.row + r] && grid[current.row + r][current.col + c]) {
-        grid[current.row + r][current.col + c].classList.add("active");
+      if (val) {
+        const y = current.row + r;
+        const x = current.col + c;
+        if (y >= 0 && y < rows && x >= 0 && x < cols) {
+          grid[y][x].style.backgroundColor = current.color;
+        }
       }
     });
   });
 }
 
-// پاک‌سازی قبلی‌ها
 function clear() {
-  grid.flat().forEach(cell => cell.classList.remove("active"));
+  grid.flat().forEach(cell => {
+    if (!cell.classList.contains("fixed")) {
+      cell.style.backgroundColor = "#222";
+    }
+  });
 }
 
-// چک کردن برخورد
-function isValid(nextRow, nextCol, shape = current.shape) {
-  return shape.every((row, r) =>
-    row.every((val, c) => {
-      if (!val) return true;
-      let x = nextCol + c;
-      let y = nextRow + r;
-      return y < rows && x >= 0 && x < cols && (!grid[y] || !grid[y][x].classList.contains("fixed"));
-    })
-  );
-}
-
-// ثابت کردن بلوک
 function fix() {
   current.shape.forEach((row, r) => {
     row.forEach((val, c) => {
-      if (val && grid[current.row + r][current.col + c]) {
-        grid[current.row + r][current.col + c].classList.add("fixed");
+      if (val) {
+        const y = current.row + r;
+        const x = current.col + c;
+        if (y >= 0 && y < rows && x >= 0 && x < cols) {
+          grid[y][x].classList.add("fixed");
+          grid[y][x].style.backgroundColor = current.color;
+        }
       }
     });
   });
 }
 
-// چک ردیف کامل
-function clearLines() {
-  for (let r = rows - 1; r >= 0; r--) {
-    if (grid[r].every(cell => cell.classList.contains("fixed"))) {
-      for (let y = r; y > 0; y--) {
-        for (let x = 0; x < cols; x++) {
-          grid[y][x].className = grid[y - 1][x].className;
-        }
-      }
-      for (let x = 0; x < cols; x++) {
-        grid[0][x].className = "cell";
-      }
-      r++; // چک دوباره همین ردیف
-    }
-  }
+function canMove(offsetRow, offsetCol) {
+  return current.shape.every((row, r) => {
+    return row.every((val, c) => {
+      if (!val) return true;
+      const y = current.row + r + offsetRow;
+      const x = current.col + c + offsetCol;
+      return (
+        y >= 0 &&
+        y < rows &&
+        x >= 0 &&
+        x < cols &&
+        !grid[y][x].classList.contains("fixed")
+      );
+    });
+  });
 }
 
-// حرکت به پایین
 function moveDown() {
-  if (isValid(current.row + 1, current.col)) {
+  if (canMove(1, 0)) {
     current.row++;
   } else {
     fix();
@@ -96,32 +105,40 @@ function moveDown() {
     current = {
       shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
       row: 0,
-      col: 3
+      col: 3,
+      color: getRandomColor()
     };
-    if (!isValid(current.row, current.col)) {
-      alert("Game Over 😵");
+    if (!canMove(0, 0)) {
+      alert("Game Over!");
       location.reload();
     }
   }
   draw();
 }
 
-// کنترل با کیبورد
+function clearLines() {
+  for (let r = rows - 1; r >= 0; r--) {
+    if (grid[r].every(cell => cell.classList.contains("fixed"))) {
+      grid[r].forEach(cell => {
+        cell.classList.remove("fixed");
+        cell.style.backgroundColor = "#222";
+      });
+      for (let y = r; y > 0; y--) {
+        for (let x = 0; x < cols; x++) {
+          grid[y][x].className = grid[y-1][x].className;
+          grid[y][x].style.backgroundColor = grid[y-1][x].style.backgroundColor;
+        }
+      }
+      r++; // بررسی مجدد همین ردیف
+    }
+  }
+}
+
 document.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowLeft" && isValid(current.row, current.col - 1)) current.col--;
-  if (e.key === "ArrowRight" && isValid(current.row, current.col + 1)) current.col++;
-  if (e.key === "ArrowDown") moveDown();
-  if (e.key === "ArrowUp") rotate();
+  if (e.key === "ArrowLeft" && canMove(0, -1)) current.col--;
+  else if (e.key === "ArrowRight" && canMove(0, 1)) current.col++;
+  else if (e.key === "ArrowDown") moveDown();
   draw();
 });
 
-// چرخش
-function rotate() {
-  const rotated = current.shape[0].map((_, i) =>
-    current.shape.map(row => row[i]).reverse()
-  );
-  if (isValid(current.row, current.col, rotated)) current.shape = rotated;
-}
-
-// تایمر بازی
-setInterval(moveDown, 500);
+setInterval(moveDown, 500); // سرعت بازی
