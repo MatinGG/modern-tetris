@@ -2,8 +2,16 @@ body {
   background: #111;
   color: white;
   font-family: sans-serif;
-  text-align: center;
-  padding-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  height: 100vh;
+  margin: 0;
+}
+
+h1 {
+  margin-bottom: 20px;
 }
 
 #game {
@@ -11,8 +19,8 @@ body {
   grid-template-columns: repeat(10, 30px);
   grid-template-rows: repeat(20, 30px);
   gap: 1px;
-  margin: 0 auto;
   background-color: #333;
+  box-shadow: 0 0 10px #000;
 }
 
 .cell {
