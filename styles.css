@@ -26,13 +26,13 @@ h1 {
 .cell {
   width: 30px;
   height: 30px;
-  background: #ffffff;
+  background: #333;
 }
 
 .active {
-  background-color: #0ff;
+  background-color: rgb(20, 190, 190);
 }
 
 .fixed {
-  background-color: #0f0;
+  background-color: rgb(51, 54, 51);
 }
